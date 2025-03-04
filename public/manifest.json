@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "MyTab",
+  "version": "1.0",
+  "description": "",
+  "action": {
+    "default_popup": "index.html"
+  },
+  "permissions": ["scripting", "tabs", "activeTab"],
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "host_permissions": ["https://*/*", "http://*/*"],
+  "icons": {
+    "16": "vite.svg"
+  }
+}
