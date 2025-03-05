@@ -1,10 +1,9 @@
-
-import './App.css'
-import Layout from './components/layout'
+import "./App.css";
+import Layout from "./components/layout";
 
 function App() {
   return (
-   <Layout>
+    <Layout>
       <div className="App">
         <header className="App-header">
           <p>
@@ -20,8 +19,8 @@ function App() {
           </a>
         </header>
       </div>
-   </Layout>
-  )
+    </Layout>
+  );
 }
 
-export default App
+export default App;

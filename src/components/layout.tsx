@@ -1,16 +1,11 @@
-import { SidebarProvider } from "@/components/ui/sidebar"
-import { AppSidebar } from "../components/app-sidebar"
-import { useState } from "react";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "../components/app-sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useState(false);
   return (
-    <SidebarProvider open={open} onOpenChange={setOpen}>
+    <SidebarProvider>
       <AppSidebar />
-      <main>
-        {children}
-      </main>
+      <main>{children}</main>
     </SidebarProvider>
-  )
+  );
 }
-

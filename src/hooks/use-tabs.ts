@@ -49,10 +49,12 @@ export function useActiveTabs() {
 
     chrome.tabs.onActivated.addListener(handleTabChange);
     chrome.tabs.onUpdated.addListener(handleTabChange);
+    chrome.tabs.onRemoved.addListener(handleTabChange);
 
     return () => {
       chrome.tabs.onActivated.removeListener(handleTabChange);
       chrome.tabs.onUpdated.removeListener(handleTabChange);
+      chrome.tabs.onRemoved.removeListener(handleTabChange);
     };
   }, []);
 
