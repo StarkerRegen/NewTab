@@ -1,5 +1,5 @@
 interface Tab {
-  id?: number;
+  id?: string;
   url?: string;
   title?: string;
   favIconUrl?: string;

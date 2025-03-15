@@ -1,20 +1,5 @@
+import { defaultTabs } from "@/utils/testUtils";
 import { useState, useEffect } from "react";
-const defaultTabs: Tab[] = [
-  {
-    id: 1,
-    url: "https://example.com",
-    title: "Example",
-    favIconUrl: "https://example.com/favicon.ico",
-    windowId: 1,
-  },
-  {
-    id: 2,
-    url: "https://example.com",
-    title: "Example",
-    favIconUrl: "https://example.com/favicon.ico",
-    windowId: 1,
-  },
-];
 
 export function useActiveTabs() {
   const [activeTabs, setActiveTabs] = useState<Tab[]>([]);

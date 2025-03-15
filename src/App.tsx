@@ -1,25 +1,15 @@
-import "./App.css";
-import Layout from "./components/layout";
+import { Panel } from "@/components/pannel";
+import { AppSidebar } from "@/components/sidebar";
+import { ThemeProvider } from "@/components/theme-provider";
 
 function App() {
   return (
-    <Layout>
-      <div className="App">
-        <header className="App-header">
-          <p>
-            Edit <code>src/App.tsx</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <div className="flex h-screen">
+        <AppSidebar />
+        <Panel />
       </div>
-    </Layout>
+    </ThemeProvider>
   );
 }
 

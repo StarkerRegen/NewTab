@@ -1,82 +1,72 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
-} from "@/components/ui/sidebar";
-import { Plus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import { closeTabById } from "@/utils/tabUtils";
+import { openOrActivateTab } from "@/utils/tabUtils";
+import { X } from "lucide-react";
+import { useState } from "react";
 
 interface TabItemProps {
   tab: Tab;
-  setTabs: React.Dispatch<React.SetStateAction<Record<number, Tab[]>>>;
+  closeFunction: (tab: Tab) => void;
 }
 
-export const TabItem: React.FC<TabItemProps> = ({ tab, setTabs }) => {
-  const closeTab = async () => {
-    await closeTabById(tab.id ?? -1);
-    setTabs((prev) => {
-      const windowTabs = prev[tab.windowId ?? -1] ?? [];
-      return {
-        ...prev,
-        [tab.windowId ?? -1]: windowTabs.filter((t) => t.id !== tab.id),
-      };
+export const TabItem: React.FC<TabItemProps> = ({ tab, closeFunction }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+
+  const handleMouseEnter = (e: React.MouseEvent) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setTooltipPosition({
+      x: rect.left + rect.width / 3,
+      y: rect.bottom - 12,
     });
+    setShowTooltip(true);
   };
+
+  const handleMouseLeave = () => {
+    setShowTooltip(false);
+  };
+
   return (
-    <SidebarMenuSubItem key={tab.id}>
-      <SidebarMenuSubButton
-        size="sm"
-        className="h-16 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-blue-50 hover:text-gray-700 dark:text-white dark:hover:text-white"
-        asChild
+    <div
+      className="flex items-center p-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={() => openOrActivateTab(tab.url ?? "")}
+    >
+      <div className="flex-shrink-0 mr-3">
+        {tab.favIconUrl ? (
+          <img src={tab.favIconUrl} alt="" className="w-5 h-5" />
+        ) : (
+          <div className="w-5 h-5 bg-gray-200 dark:bg-gray-600 rounded-full" />
+        )}
+      </div>
+      <div className="flex-grow min-w-0">
+        <div className="text-sm font-medium text-gray-800 dark:text-white truncate">
+          {tab.title}
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          {tab.url}
+        </div>
+      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          closeFunction(tab);
+        }}
+        className="ml-2 p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full"
+        aria-label="Close tab"
       >
-        <div className="flex items-center">
-          <Avatar className="h-6 w-6 rounded-full">
-            <AvatarImage src={tab.favIconUrl} alt={tab.title} />
-            <AvatarFallback className="rounded-lg text-white text-sm bg-amber-400">
-              {tab.title?.charAt(0) ?? "U"}
-            </AvatarFallback>
-          </Avatar>
-          <div className="grid flex-1 text-left text-sm leading-tight ml-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="truncate font-semibold hover:underline">
-                  {tab.title}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                align="start"
-                className="bg-amber-100 border-amber-300 shadow-amber-500 text-gray-500"
-              >
-                {tab.title}
-              </TooltipContent>
-            </Tooltip>
-            <span className="truncate text-xs text-gray-500">{tab.url}</span>
-          </div>
-          <div className="flex flex-col justify-between items-center gap-2">
-            <Button
-              variant="ghost"
-              className="hover:bg-blue-100 hover:shadow-2xl size-4"
-              onClick={closeTab}
-            >
-              <X className="ml-auto size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              className="hover:bg-blue-100 hover:shadow-2xl size-4"
-              onClick={() => console.log(tab)}
-            >
-              <Plus className="ml-auto size-4" />
-            </Button>
+        <X className="w-4 h-4" />
+      </button>
+      {showTooltip && (
+        <div
+          className="absolute z-10 bg-gray-800 text-white text-xs px-2 py-1 rounded"
+          style={{ left: tooltipPosition.x, top: tooltipPosition.y }}
+        >
+          <div className="flex-col items-center">
+            <h4 className="text-sm font-medium">{tab.title}</h4>
+            <div className="text-xs text-gray-200">{tab.url}</div>
           </div>
         </div>
-      </SidebarMenuSubButton>
-    </SidebarMenuSubItem>
+      )}
+    </div>
   );
 };
