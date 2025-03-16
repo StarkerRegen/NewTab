@@ -2,16 +2,16 @@ import { defaultTabs } from "@/utils/testUtils";
 import { useState, useEffect } from "react";
 
 export function useActiveTabs() {
-  const [activeTabs, setActiveTabs] = useState<Tab[]>([]);
+  const [activeTabs, setActiveTabs] = useState<ActiveTab[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
     const getActiveTabs = async () => {
       try {
-        const tabs = await new Promise<Tab[]>((resolve) => {
+        const tabs = await new Promise<ActiveTab[]>((resolve) => {
           chrome.tabs.query({ url: ["https://*/*", "http://*/*"] }, (tabs) => {
-            resolve(tabs as Tab[]);
+            resolve(tabs as ActiveTab[]);
           });
         });
         setActiveTabs(tabs);
@@ -27,7 +27,6 @@ export function useActiveTabs() {
 
     getActiveTabs();
 
-    // Optional: Add listener for tab changes
     const handleTabChange = () => {
       getActiveTabs();
     };

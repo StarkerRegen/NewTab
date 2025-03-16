@@ -1,90 +1,36 @@
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { SlotItemMapArray, Swapy, utils } from "swapy";
-import { createSwapy } from "swapy";
+import { useState } from "react";
 import { TabItem } from "./tab";
+import { CardItem } from "@/models/CardItem";
+import { db } from "@/models/db";
 
-const initialItems: Tab[] = [
-  {
-    id: "1",
-    title: "Google",
-    url: "https://www.google.com/",
-    windowId: 1,
-    favIconUrl: "https://www.google.com/favicon.ico",
-  },
-  {
-    id: "2",
-    title: "GitHub",
-    url: "https://github.com/",
-    windowId: 1,
-    favIconUrl: "https://github.com/favicon.ico",
-  },
-  {
-    id: "3",
-    title: "Stack Overflow",
-    url: "https://stackoverflow.com/",
-    windowId: 2,
-    favIconUrl: "https://stackoverflow.com/favicon.ico",
-  },
-  {
-    id: "4",
-    title: "MDN Web Docs",
-    url: "https://developer.mozilla.org/",
-    windowId: 2,
-    favIconUrl: "https://developer.mozilla.org/favicon.ico",
-  },
-];
-
-function Card() {
+function Card({
+  cardId,
+  cardTitle,
+  cardItems,
+}: {
+  cardId: number;
+  cardTitle: string;
+  cardItems: CardItem[];
+}) {
   const [isOpen, setIsOpen] = useState(true);
-  const [cardTitle, setCardTitle] = useState("Active Tabs");
+  const [title, setTitle] = useState(cardTitle);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [items, setItems] = useState<Tab[]>(initialItems);
-  const [slotItemMap, setSlotItemMap] = useState<SlotItemMapArray>(() =>
-    utils.initSlotItemMap(initialItems, "id")
-  );
-  const slottedItems = useMemo(
-    () => utils.toSlottedItems(items, "id", slotItemMap),
-    [items, slotItemMap]
-  );
-  const swapyRef = useRef<Swapy | null>(null);
+  const [items, setItems] = useState<CardItem[]>(cardItems);
 
-  const containerRef = useRef<HTMLDivElement>(null);
+  const deleteTab = async (item: CardItem) => {
+    if (!item.id) return;
+    try {
+      await db.cardItems.where("id").equals(item.id).delete();
+      setItems(items.filter((i) => i.id !== item.id));
+    } catch (error) {
+      console.error("Error deleting item:", error);
+    }
+  };
 
-  useEffect(
-    () =>
-      utils.dynamicSwapy(
-        swapyRef.current,
-        items,
-        "id",
-        slotItemMap,
-        setSlotItemMap
-      ),
-    [items] // Only re-run when items change, cannot be changed
-  );
-
-  useEffect(() => {
-    swapyRef.current = createSwapy(containerRef.current!, {
-      manualSwap: true,
-      // animation: 'dynamic'
-      // autoScrollOnDrag: true,
-      // swapMode: 'drop',
-      // enabled: true,
-      // dragAxis: 'x',
-      // dragOnHold: true
-    });
-
-    swapyRef.current.onSwap((event) => {
-      setSlotItemMap(event.newSlotItemMap.asArray);
-    });
-
-    return () => {
-      swapyRef.current?.destroy();
-    };
-  }, []);
-
-  const deleteTab = (item: Tab) => {
-    setItems(items.filter((t) => t.id !== item.id));
+  const updateCardTitle = async (t: string) => {
+    setTitle(t);
+    await db.cards.where("id").equals(cardId).modify({ title: t });
   };
 
   return (
@@ -94,8 +40,8 @@ function Card() {
           <input
             type="text"
             className="text-xl font-semibold text-gray-800 dark:text-white bg-white dark:bg-gray-800 border rounded px-2 focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500"
-            value={cardTitle}
-            onChange={(e) => setCardTitle(e.target.value)}
+            value={title}
+            onChange={(e) => updateCardTitle(e.target.value)}
             onBlur={() => setIsEditingTitle(false)}
             onKeyDown={(e) => e.key === "Enter" && setIsEditingTitle(false)}
             autoFocus
@@ -105,7 +51,7 @@ function Card() {
             className="text-xl font-semibold text-gray-800 dark:text-white cursor-pointer"
             onClick={() => setIsEditingTitle(true)}
           >
-            {cardTitle}
+            {title}
           </h2>
         )}
         <button
@@ -121,19 +67,14 @@ function Card() {
         </button>
       </div>
       {isOpen && (
-        <div className="container" ref={containerRef}>
-          <div className="items">
-            {slottedItems.map(
-              ({ slotId, itemId, item }) =>
-                item && (
-                  <div className="slot" key={slotId} data-swapy-slot={slotId}>
-                    <div key={itemId} data-swapy-item={itemId}>
-                      <TabItem tab={item as Tab} closeFunction={deleteTab} />
-                    </div>
-                  </div>
-                )
-            )}
-          </div>
+        <div className="container">
+          {items.map((item) => (
+            <TabItem
+              key={item.id}
+              tab={item as ActiveTab}
+              closeFunction={(tab) => deleteTab(tab as CardItem)}
+            />
+          ))}
         </div>
       )}
     </div>

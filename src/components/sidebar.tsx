@@ -11,8 +11,8 @@ import {
   PanelLeftOpen,
 } from "lucide-react";
 
-const groupedTabs = (tabs: Tab[]) =>
-  tabs.reduce<Record<number, Tab[]>>((acc, item) => {
+const groupedTabs = (tabs: ActiveTab[]) =>
+  tabs.reduce<Record<number, ActiveTab[]>>((acc, item) => {
     const windowId = item.windowId ?? -1;
     if (!acc[windowId]) {
       acc[windowId] = [];
@@ -21,11 +21,11 @@ const groupedTabs = (tabs: Tab[]) =>
     return acc;
   }, {});
 
-export function AppSidebar() {
+export function Sidebar() {
   // const { activeTabs, loading } = useActiveTabs();
   const loading = false;
   const activeTabs = defaultTabs;
-  const [tabs, setTabs] = useState<Record<number, Tab[]>>([]);
+  const [tabs, setTabs] = useState<Record<number, ActiveTab[]>>([]);
   const [isExpanded, setIsExpanded] = useState(true);
   const [expandedSections, setExpandedSections] = useState<
     Record<number, boolean>
@@ -43,8 +43,8 @@ export function AppSidebar() {
     setExpandedSections(initialExpandedSections);
   }, [tabs]);
 
-  const closeTab = async (tab: Tab) => {
-    await closeTabById(tab.id ?? "");
+  const closeTab = async (tab: ActiveTab) => {
+    await closeTabById(tab.id ?? -1);
     setTabs((prev) => {
       const windowTabs = prev[tab.windowId ?? -1] ?? [];
       return {
@@ -107,9 +107,7 @@ export function AppSidebar() {
                     <button
                       onClick={() => toggleSection(windowId)}
                       className={`h-12 w-full flex items-center border-b border-gray-200 dark:border-gray-700 ${
-                        isExpanded
-                          ? "justify-between bg-blue-50 dark:bg-gray-700"
-                          : "justify-center"
+                        isExpanded ? "justify-between" : "justify-center"
                       }`}
                     >
                       {isExpanded ? (

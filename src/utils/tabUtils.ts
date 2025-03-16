@@ -31,11 +31,11 @@ export const closeCurrentTab = async (): Promise<void> => {
  * @param {number} tabId - The ID of the tab to close
  * @returns {Promise<void>} A promise that resolves when the tab is closed
  */
-export const closeTabById = async (tabId: string): Promise<void> => {
-  if (tabId == "") return;
+export const closeTabById = async (tabId: number): Promise<void> => {
+  if (tabId == -1) return;
   if (typeof chrome !== "undefined" && chrome.tabs) {
     try {
-      await chrome.tabs.remove(parseInt(tabId));
+      await chrome.tabs.remove(tabId);
     } catch (error) {
       console.error(`Failed to close tab ${tabId}:`, error);
     }

@@ -1,30 +1,75 @@
 import { useState, useEffect } from "react";
 import Card from "./card";
-import { defaultTabs } from "@/utils/testUtils";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/components/theme-provider";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db, exportDB, importJson } from "@/models/db";
+import { CardItem } from "@/models/CardItem";
 
 export function Panel() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredTabs, setFilteredTabs] = useState<Tab[]>(defaultTabs);
   const { theme, setTheme } = useTheme();
+  const tabs = useLiveQuery(() => db.cardItems.toArray());
+  const cards = useLiveQuery(() => db.cards.toArray());
+  const [filteredTabs, setFilteredTabs] = useState<CardItem[]>(tabs ?? []);
+  const [groupedTabs, setGroupedTabs] = useState<Record<number, CardItem[]>>(
+    {}
+  );
+
+  useEffect(() => {
+    cards?.forEach((card) => {
+      const cardTabs = filteredTabs?.filter((tab) => tab.cardId === card.id);
+      setGroupedTabs((prev) => ({
+        ...prev,
+        [card.id as keyof typeof prev]: cardTabs ?? [],
+      }));
+    });
+  }, [cards, filteredTabs]);
 
   // Filter tabs based on search term
   useEffect(() => {
     if (!searchTerm.trim()) {
-      setFilteredTabs(defaultTabs);
+      setFilteredTabs(tabs ?? []);
       return;
     }
 
     const lowercaseSearch = searchTerm.toLowerCase();
-    const filtered = defaultTabs.filter(
+    const filtered = tabs?.filter(
       (tab) =>
         tab.title.toLowerCase().includes(lowercaseSearch) ||
         tab.url.toLowerCase().includes(lowercaseSearch)
     );
 
-    setFilteredTabs(filtered);
-  }, [searchTerm]);
+    setFilteredTabs(filtered ?? []);
+  }, [searchTerm, tabs]);
+
+  const handleImport = async () => {
+    try {
+      const [fileHandle] = await window.showOpenFilePicker({
+        types: [
+          {
+            description: "JSON Files",
+            accept: {
+              "application/json": [".json"],
+            },
+          },
+        ],
+        multiple: false,
+      });
+
+      const file = await fileHandle.getFile();
+      await importJson(file);
+
+      console.log("Database imported successfully");
+    } catch (error) {
+      console.error("Failed to import database:", error);
+      alert(
+        `Failed to import database: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  };
 
   return (
     <div
@@ -69,10 +114,7 @@ export function Panel() {
           <button
             className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
             aria-label="Import tabs"
-            onClick={() => {
-              // Import functionality
-              console.log("Import tabs");
-            }}
+            onClick={handleImport}
           >
             Import
           </button>
@@ -82,10 +124,7 @@ export function Panel() {
           <button
             className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none"
             aria-label="Export tabs"
-            onClick={() => {
-              // Export functionality
-              console.log("Export tabs");
-            }}
+            onClick={exportDB}
           >
             Export
           </button>
@@ -94,9 +133,43 @@ export function Panel() {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card />
-        {Object.keys(filteredTabs).length === 0 && (
-          <div className="col-span-3 flex justify-center items-center h-40 bg-gray-50 rounded-lg border border-gray-200">
+        {Object.keys(groupedTabs).map((cardId) => (
+          <Card
+            key={cardId}
+            cardId={parseInt(cardId)}
+            cardTitle={
+              cards?.find((card) => card.id === parseInt(cardId))?.title ||
+              "Untitled"
+            }
+            cardItems={groupedTabs[parseInt(cardId)]}
+          />
+        ))}
+        {!searchTerm && (
+          <button
+            className="flex justify-center items-center h-full w-full bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+            onClick={async () => {
+              const newCardId = await db.cards.add({
+                title: "New Card",
+                description: "",
+                createdAt: new Date(),
+                updatedAt: new Date(),
+              });
+              setGroupedTabs({
+                ...groupedTabs,
+                [newCardId]: [],
+              });
+            }}
+          >
+            <p className="text-gray-500 dark:text-gray-400 font-semibold">
+              + Add Card
+            </p>
+          </button>
+        )}
+        {searchTerm && Object.keys(filteredTabs).length === 0 && (
+          <div
+            className="col-span-3 flex justify-center items-center h-40 bg-gray-50 rounded-lg border border-gray-200"
+            key="no-tabs"
+          >
             <p className="text-gray-500">No tabs match your search criteria</p>
           </div>
         )}
